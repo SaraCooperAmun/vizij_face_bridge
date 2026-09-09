@@ -78,32 +78,33 @@ The available expression mappings are:
 | `asleep`       | `sleepy`           |
 | `concerned`    | `concerned`        |
 
-The expression intensity is in the range `0.0–1.0`.
+The expression arousal is in the range `0.0–1.0`.
 
-If intensity is `0.0`, the bridge uses `0.5`.
+If arousal is `0.0`, the bridge uses `0.5`. This is corresponding to the 50% Pose on Vizij. 
+We can adjust it as needed. 
 
 ## Happy
 
 ```bash
-ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'happy', valence: 0.0, arousal: 0.0, confidence: 0.0}, intensity: 0.5}"
+ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'happy', valence: 0.0, arousal: 0.0, confidence: 0.0}, arousal: 0.5}"
 ```
 
 ## Sad
 
 ```bash
-ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'sad', valence: 0.0, arousal: 0.0, confidence: 0.0}, intensity: 0.5}"
+ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'sad', valence: 0.0, arousal: 0.0, confidence: 0.0}, arousal: 0.5}"
 ```
 
 ## Surprised
 
 ```bash
-ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'surprised', valence: 0.0, arousal: 0.0, confidence: 0.0}, intensity: 0.5}"
+ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'surprised', valence: 0.0, arousal: 0.0, confidence: 0.0}, arousal: 0.5}"
 ```
 
 ## Angry
 
 ```bash
-ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'angry', valence: 0.0, arousal: 0.0, confidence: 0.0}, intensity: 0.5}"
+ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'angry', valence: 0.0, arousal: 0.0, confidence: 0.0}, arousal: 0.5}"
 ```
 
 ---
@@ -327,7 +328,7 @@ ros2 run tts_ros tts_node
 ## 4. Test an expression
 
 ```bash
-ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'happy', valence: 0.0, arousal: 0.0, confidence: 0.0}, intensity: 0.5}"
+ros2 topic pub --once /skill/set_expression interaction_skills/msg/SetExpression "{meta: {caller: '', priority: 0}, expression: {header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, expression: 'happy', valence: 0.0, arousal: 0.0, confidence: 0.0}, arousal: 0.5}"
 ```
 
 ## 4. Test Look At

@@ -187,31 +187,22 @@ class VizijFaceBridge(Node):
         semantic = EXPRESSION_MAP[expr]
 
         # ---------------------------------------------------------------
-        # SetExpression contains an explicit intensity.
+        # SetExpression contains the arousal value.
+        # In this system, arousal is expected to be in the range [0.0, 1.0].
         # ---------------------------------------------------------------
 
-        intensity = float(msg.intensity)
+        arousal = float(msg.arousal)
 
-        # Keep the pose weight in the valid range.
-        #
-        # Existing behavior:
-        # intensity == 0 -> use 0.5
-        #
-        # This is preserved from your previous bridge.
-        # ---------------------------------------------------------------
-
-        if intensity == 0.0:
-            intensity = 0.5
-
-        intensity = max(
+        # Keep the value in the valid range.
+        arousal = max(
             0.0,
-            min(1.0, intensity),
+            min(1.0, arousal),
         )
 
         payload = {
             "type": "pose",
             "semanticKey": semantic,
-            "value": intensity,
+            "value": arousal,
         }
 
         sent = self.send_to_browser(payload)
@@ -219,7 +210,7 @@ class VizijFaceBridge(Node):
         if sent:
             self.get_logger().info(
                 f"SetExpression -> WS: "
-                f"{expr} -> {semantic} = {intensity:.3f}"
+                f"{expr} -> {semantic} = {arousal:.3f}"
             )
 
     # -------------------------------------------------------------------
