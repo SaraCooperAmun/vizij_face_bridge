@@ -191,7 +191,7 @@ class VizijFaceBridge(Node):
         # In this system, arousal is expected to be in the range [0.0, 1.0].
         # ---------------------------------------------------------------
 
-        arousal = float(msg.arousal)
+        arousal = float(msg.expression.arousal)
 
         # Keep the value in the valid range.
         arousal = max(
