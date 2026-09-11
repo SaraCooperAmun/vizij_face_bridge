@@ -311,11 +311,20 @@ ros2 run vizij_face_bridge bridge
 
 ## 2. Start vizij-web
 
-Start **vizij-web** demo:
+Start **vizij-web** demo, with only web:
 
 ```text
-pnpm run dev:tutorial-agent-face --host
+pnpm run dev:demo-ros4hri-face --host
 ```
+
+With Tauri, opening the face in a separate native window (note that in the robot due to WebKit dependency Tauri does not work). 
+
+```bash
+cd ~/vizij_project/vizij-web/apps/demo-ros4hri-face
+pnpm tauri dev
+```
+
+Tauri starts the Vite development server and displays the face in a separate Tauri window instead of opening it in Firefox.
 
 ## 3. Start TTS (if desired)
 
