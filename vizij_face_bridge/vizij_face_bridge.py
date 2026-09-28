@@ -14,7 +14,9 @@ from rclpy.action import ActionServer, GoalResponse, CancelResponse
 from interaction_skills.msg import SetExpression
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
+from hri_msgs.srv import SetMouthMode
 from interaction_skills.action import LookAt
+from hri_msgs.msg import Visemes
 # ---------------------------------------------------------------------------
 # Global asyncio state
 # ---------------------------------------------------------------------------
@@ -45,7 +47,23 @@ EXPRESSION_MAP = {
     "concerned": "concerned",
 }
 
-
+ROS4HRI_TO_VIZIJ_VISEME = {
+    0: "sil",  # SIL
+    1: "p",    # PP
+    2: "f",    # FF
+    3: "t_2",  # TH
+    4: "t",    # DD
+    5: "k",    # KK
+    6: "t_2",  # CH
+    7: "s",    # SS
+    8: "n",    # NN
+    9: "r",    # RR
+    10: "a",   # AA
+    11: "e",   # E
+    12: "i",   # IH
+    13: "o",   # OH
+    14: "u",   # OU
+}
 # ---------------------------------------------------------------------------
 # ROS2 node
 # ---------------------------------------------------------------------------
@@ -65,10 +83,16 @@ class VizijFaceBridge(Node):
             self.set_expression_cb,
             10,
         )
+    
         self.set_visemes_service = self.create_service(
             SetBool,
             "/vizij/set_visemes_enabled",
             self.set_visemes_enabled_cb,
+        )
+        self.set_mouth_mode_service = self.create_service(
+            SetMouthMode,
+            "/vizij/set_mouth_mode",
+            self.set_mouth_mode_cb,
         )
         # ---------------------------------------------------------------
         # Gaze
@@ -106,7 +130,12 @@ class VizijFaceBridge(Node):
             self.speech_cb,
             10,
         )
-
+        self.viseme_subscription = self.create_subscription(
+            Visemes,
+            "/tts/visemes",
+            self.viseme_cb,
+            10,
+        )
         # ---------------------------------------------------------------
         # Startup logging
         # ---------------------------------------------------------------
@@ -133,7 +162,34 @@ class VizijFaceBridge(Node):
         self.get_logger().info(
             "  WebSocket:        ws://0.0.0.0:9001"
         )
+    def viseme_cb(self, msg: Visemes):
+        """
+        Forward the ROS4HRI viseme to the browser using
+        the Vizij frontend viseme vocabulary.
+        """
 
+        if not msg.visemes:
+            return
+
+        viseme = msg.visemes[0]
+
+        value = ROS4HRI_TO_VIZIJ_VISEME.get(
+            int(viseme.value),
+            "sil",
+        )
+
+        payload = {
+            "type": "viseme",
+            "value": value,
+        }
+
+        sent = self.send_to_browser(payload)
+
+        if sent:
+            self.get_logger().info(
+                f"Viseme -> WS: "
+                f"{viseme.value} -> {value}"
+            )
     def set_visemes_enabled_cb(
         self,
         request: SetBool.Request,
@@ -165,6 +221,35 @@ class VizijFaceBridge(Node):
 
         return response
 
+    def set_mouth_mode_cb(self, request, response):
+        mode = request.mode.strip().lower()
+
+        if mode not in {
+            "static",
+            "hidden",
+            "lipsync",
+            "open_close",
+        }:
+            response.success = False
+            response.message = f"Unknown mouth mode: {mode}"
+            return response
+
+        payload = {
+            "type": "mouth_mode",
+            "mode": mode,
+        }
+
+        sent = self.send_to_browser(payload)
+
+        response.success = sent
+        response.message = (
+            f"Mouth mode set to {mode}"
+            if sent
+            else "Failed to send mouth mode to browser"
+        )
+
+        return response
+        
     # -------------------------------------------------------------------
     # Expression callback
     # -------------------------------------------------------------------
@@ -178,13 +263,7 @@ class VizijFaceBridge(Node):
             )
             return
 
-        if expr not in EXPRESSION_MAP:
-            self.get_logger().warning(
-                f"Expression '{expr}' not mapped"
-            )
-            return
-
-        semantic = EXPRESSION_MAP[expr]
+        semantic = EXPRESSION_MAP.get(expr, expr)
 
         # ---------------------------------------------------------------
         # SetExpression contains the arousal value.
@@ -198,6 +277,9 @@ class VizijFaceBridge(Node):
             0.0,
             min(1.0, arousal),
         )
+
+        if arousal == 0.0:
+            arousal = 0.5
 
         payload = {
             "type": "pose",
@@ -233,7 +315,31 @@ class VizijFaceBridge(Node):
 
         return CancelResponse.ACCEPT
 
+    def mouth_mode_cb(self, msg: String):
 
+        mode = msg.data.strip().lower()
+
+        if mode not in {
+            "static",
+            "hidden",
+            "lipsync",
+            "open_close",
+        }:
+            self.get_logger().error(
+                f"Unknown mouth mode: {mode}"
+            )
+            return
+
+        payload = {
+            "type": "mouth_mode",
+            "mode": mode,
+        }
+
+        if self.send_to_browser(payload):
+            self.get_logger().info(
+                f"Mouth mode -> WS: {mode}"
+            )
+            
     def gaze_execute_cb(self, goal_handle):
 
         request = goal_handle.request
