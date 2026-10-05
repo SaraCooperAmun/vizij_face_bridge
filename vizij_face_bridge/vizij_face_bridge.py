@@ -13,7 +13,6 @@ from rclpy.action import ActionServer, GoalResponse, CancelResponse
 
 from interaction_skills.msg import SetExpression
 from std_msgs.msg import String
-from std_srvs.srv import SetBool
 from hri_msgs.srv import SetMouthMode
 from interaction_skills.action import LookAt
 from hri_msgs.msg import Visemes
@@ -84,16 +83,12 @@ class VizijFaceBridge(Node):
             10,
         )
     
-        self.set_visemes_service = self.create_service(
-            SetBool,
-            "/vizij/set_visemes_enabled",
-            self.set_visemes_enabled_cb,
-        )
         self.set_mouth_mode_service = self.create_service(
             SetMouthMode,
             "/vizij/set_mouth_mode",
             self.set_mouth_mode_cb,
         )
+
         # ---------------------------------------------------------------
         # Gaze
         # ---------------------------------------------------------------
@@ -162,6 +157,7 @@ class VizijFaceBridge(Node):
         self.get_logger().info(
             "  WebSocket:        ws://0.0.0.0:9001"
         )
+
     def viseme_cb(self, msg: Visemes):
         """
         Forward the ROS4HRI viseme to the browser using
@@ -190,36 +186,6 @@ class VizijFaceBridge(Node):
                 f"Viseme -> WS: "
                 f"{viseme.value} -> {value}"
             )
-    def set_visemes_enabled_cb(
-        self,
-        request: SetBool.Request,
-        response: SetBool.Response,
-    ):
-        enabled = bool(request.data)
-
-        payload = {
-            "type": "visemes_enabled",
-            "enabled": enabled,
-        }
-
-        sent = self.send_to_browser(payload)
-
-        if sent:
-            response.success = True
-            response.message = (
-                f"Visemes {'enabled' if enabled else 'disabled'}"
-            )
-
-            self.get_logger().info(
-                f"Visemes -> WS: enabled={enabled}"
-            )
-        else:
-            response.success = False
-            response.message = (
-                "Failed to send viseme state to browser"
-            )
-
-        return response
 
     def set_mouth_mode_cb(self, request, response):
         mode = request.mode.strip().lower()
@@ -264,7 +230,6 @@ class VizijFaceBridge(Node):
             return
 
         semantic = EXPRESSION_MAP.get(expr, expr)
-
         # ---------------------------------------------------------------
         # SetExpression contains the arousal value.
         # In this system, arousal is expected to be in the range [0.0, 1.0].
@@ -306,7 +271,6 @@ class VizijFaceBridge(Node):
         )
 
         return GoalResponse.ACCEPT
-
 
     def gaze_cancel_cb(self, goal_handle):
         self.get_logger().info(
